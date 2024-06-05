@@ -5,26 +5,45 @@ import sqlite3
 #  population: https://www.worldometers.info/coronavirus/country/us/
 #  covid data: https://data.cdc.gov/NCHS/Provisional-COVID-19-Death-Counts-by-Week-Ending-D/r8kw-7aab/about_data
 #
-# Step 1: Read the CSV file into a pandas DataFrame
-df = pd.read_csv(
-    '../data/Provisional_COVID-19_Death_Counts_by_Week_Ending_Date_and_State_20240605 (1).csv')
-
-# Step 2: Create a connection to a new SQLite database (or connect to an existing one)
 conn = sqlite3.connect('../data/covid_database.db')
 
-# Step 3: Insert the DataFrame into the database
-df.to_sql('usa_covid', conn, if_exists='replace', index=False)
+
+def load(conn, csv, table, date_column=None):
+    df = pd.read_csv(csv, parse_dates=date_column if date_column else None)
+    df.to_sql(table, conn, if_exists='replace', index=False)
+
+# do once
+#  load(conn,'../data/Provisional_COVID-19_Death_Counts_by_Week_Ending_Date_and_State_20240605.csv', 'cdc_covid', ['Data as of', 'Start Date', 'End Date', 'Week Ending Date'])
+#  load(conn,'../data/worldmeter-covid-usa.csv', 'worldmeter_covid')
+#  load(conn,'../data/red_blue_states.csv', 'worldmeter_covid')
+
+#  print(pd.read_sql_query( 'select cdc.state, sum("COVID-19 Deaths") as deaths from usa_covid cdc group by state order by deaths', conn))
 
 
-print(pd.read_sql_query(
-    'select cdc.state, sum("COVID-19 Deaths") as deaths from usa_covid cdc group by state order by deaths', conn))
+query = '''
+    select
+        cdc.state,
+        sum("COVID-19 Deaths") as deaths,
+        wm.population as "Population",
+        round(sum("covid-19 deaths")/wm.population*1000000) as "Deaths per 1m",
+        rb.party
+    from
+        cdc_covid cdc
+    left join
+        worldmeter_covid wm on cdc.state=wm."usa state"
+    left join
+        red_blue rb on rb.state=cdc.state
+    where
+        cdc.`group`="By Month" and
+        cdc."End Date" >= "2021-02-01"
+    group by
+        cdc.state, wm.population
+    order by
+        "Deaths per 1m" desc;
+'''
+print(pd.read_sql_query(query, conn))
 
-
-print(pd.read_sql_query('select cdc.state, sum("COVID-19 Deaths") as deaths, wm.population as "Population", round(sum("covid-19 deaths")/wm.population*1000000) as "Deaths per 1m" from usa_covid cdc join worldmeter_covid wm on cdc.state=wm."usa state" join  where cdc.`group`="By Month" group by cdc.state, wm.population order by "Deaths per 1m";', conn))
-
-# Step 4: Perform SQL queries
-query = "SELECT * FROM my_table WHERE column_name = 'some_value'"
-result = pd.read_sql_query(query, conn)
+#  result = pd.read_sql_query(query, conn)
 
 # Display the query result
-print(result)
+#  print(result)
