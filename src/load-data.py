@@ -29,8 +29,13 @@ load(conn, '../data/Provisional Mortality Statistics, 2018 through Last Week(tab
      'cdc_covid_county')
 
 load(conn, '../data/worldmeter-covid-usa.csv', 'worldmeter_covid')
+
 load(conn, '../data/red-blue-states.csv', 'red_blue_states')
+
+# presidential election results by country
 load(conn, '../data/countypres_2000-2020.csv', 'harvard_county_pres_elections')
+
+# social vulnerability index
 load(conn, '../data/svi_interactive_map.csv', 'harvard_vulnerability', sep=',')
 
 #  print(pd.read_sql_query(
