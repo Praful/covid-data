@@ -8,18 +8,6 @@ import sqlite3
 conn = sqlite3.connect('../data/covid_database.db')
 
 
-def load(conn, csv, table, date_column=None):
-    df = pd.read_csv(csv, parse_dates=date_column if date_column else None)
-    df.to_sql(table, conn, if_exists='replace', index=False)
-
-# do once
-#  load(conn,'../data/Provisional_COVID-19_Death_Counts_by_Week_Ending_Date_and_State_20240605.csv', 'cdc_covid', ['Data as of', 'Start Date', 'End Date', 'Week Ending Date'])
-#  load(conn,'../data/worldmeter-covid-usa.csv', 'worldmeter_covid')
-#  load(conn,'../data/red_blue_states.csv', 'worldmeter_covid')
-
-#  print(pd.read_sql_query( 'select cdc.state, sum("COVID-19 Deaths") as deaths from usa_covid cdc group by state order by deaths', conn))
-
-
 query = '''
     select
         cdc.state,
